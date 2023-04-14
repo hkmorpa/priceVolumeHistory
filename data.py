@@ -5,15 +5,18 @@ import sqlite3
 conn = sqlite3.connect('priceVolume.db')
 cursor = conn.cursor()
 
-Stocks = ["SBI", "HDFCBANK", "ICICIBANK"]
+Stocks = []
+with open('stocks', 'r') as f:
+    for line in f:
+        Stocks.append(line.strip())
 
 #Create all the tables to be monitored
 for stock in Stocks:
-    query = f"CREATE TABLE if not exists {stock} (date DATE, stock TEXT, price INTEGER, volume INTEGER)"
+    query = f"CREATE TABLE if not exists '{stock}' (date DATE, stock TEXT, price INTEGER, volume INTEGER)"
     cursor.execute(query)
     conn.commit()
 
-query = f'INSERT INTO {stock} VALUES ("2023-04-14", "SBI", 100, 200)'
+query = f"INSERT INTO '{stock}' VALUES ('2023-04-14', 'SBI', 100, 200)"
 cursor.execute(query)
 conn.commit()
 
