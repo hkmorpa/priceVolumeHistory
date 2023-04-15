@@ -18,15 +18,25 @@ class priceVolumeHistory:
     
         print("Stocks Filled")
 
+    def get_table_name(self,stock):
+        if '-' in stock:
+            stock = stock.replace("-", "_")
+        if '&' in stock:
+            stock = stock.replace("&", "_")
+        return stock
+
     #Create all the tables to be monitored
     def create_tables(self):
         for stock in self.stocks:
-            stock_encoded = urllib.parse.quote(stock)
-            query = f"CREATE TABLE if not exists '{stock_encoded}' (date DATE, price INTEGER, volume INTEGER)"
+            table_name = self.get_table_name(stock)
+            query = f"CREATE TABLE if not exists '{table_name}' (date DATE, price INTEGER, volume INTEGER)"
             self.cursor.execute(query)
             self.conn.commit()
+            print (f"created table for {table_name}")
 
     def get_data_from_NSE(self, stock):
+        stock_encoded = urllib.parse.quote(stock)
+        stock = stock_encoded
         headers = {'User-Agent': 'Mozilla/5.0'}
      
         main_url = "https://www.nseindia.com/"
@@ -47,20 +57,24 @@ class priceVolumeHistory:
     def fill_data_from_NSE(self):
         for stock in self.stocks:
             try:
-                stock_encoded = urllib.parse.quote(stock)
-                print(stock_encoded)
-                [volume, price] = self.get_data_from_NSE(stock_encoded)
+                [volume, price] = self.get_data_from_NSE(stock)
+                table_name =  self.get_table_name(stock)
+
                 today = datetime.date.today()
-                todayDate = today.strftime('%Y-%m-%d')
-                query = f"SELECT COUNT(*) FROM {stock_encoded} WHERE date = {todayDate}"
+                if today.weekday() == 5 or today.weekday() == 6:  # Saturday has a weekday index of 5
+                    last_working_day = today - datetime.timedelta(days=today.weekday()-4)
+                todayDate = last_working_day.strftime('%Y-%m-%d')
+
+                query = f"SELECT COUNT(*) FROM {table_name} WHERE date = {todayDate}"
+                print(query)
                 self.cursor.execute(query)
                 count = self.cursor.fetchone()[0]
                 if count <= 0:
-                    query = f"INSERT INTO {stock_encoded} (date,price,volume) VALUES ({todayDate},{price},{volume})"
+                    query = f"INSERT INTO {table_name} (date,price,volume) VALUES ({todayDate},{price},{volume})"
                     self.cursor.execute(query)
                     self.conn.commit()
                 else:
-                    query = f"UPDATE {stock_encoded} SET date = {todayDate}, price = {price}, volume = {volume} WHERE date = {todayDate}"
+                    query = f"UPDATE {table_name} SET date = {todayDate}, price = {price}, volume = {volume} WHERE date = {todayDate}"
                     self.cursor.execute(query)
                     self.conn.commit()
 
