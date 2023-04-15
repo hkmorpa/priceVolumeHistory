@@ -10,6 +10,8 @@ class priceVolumeHistory:
         self.conn = sqlite3.connect('priceVolume.db')
         self.cursor = self.conn.cursor()
         self.stocks = []
+        self.fill_stocks()
+        self.create_tables()
     
     def fill_stocks(self):
         with open('stocks', 'r') as f:
@@ -66,7 +68,6 @@ class priceVolumeHistory:
                 todayDate = last_working_day.strftime('%Y-%m-%d')
 
                 query = f"SELECT COUNT(*) FROM {table_name} WHERE date = {todayDate}"
-                print(query)
                 self.cursor.execute(query)
                 count = self.cursor.fetchone()[0]
                 if count <= 0:
@@ -84,8 +85,6 @@ class priceVolumeHistory:
 
 def main():
     pvObj = priceVolumeHistory()
-    pvObj.fill_stocks()
-    pvObj.create_tables()
     pvObj.fill_data_from_NSE()
 
 if __name__ == '__main__':
