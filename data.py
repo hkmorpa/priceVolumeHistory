@@ -4,6 +4,7 @@ from bs4 import BeautifulSoup
 import sqlite3
 import urllib.parse
 import datetime
+import argparse
 
 class priceVolumeHistory:
     def __init__(self):
@@ -79,11 +80,17 @@ class priceVolumeHistory:
                     self.cursor.execute(query)
                     self.conn.commit()
 
-                print(count, volume,price)
+                print(table_name, count, volume,price)
             except Exception as e:
                 print(f"Error occured for {stock}, {e}")
 
 def main():
+    global args
+
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-show", action="store_true", help="Show the tables")
+
     pvObj = priceVolumeHistory()
     pvObj.fill_data_from_NSE()
 
