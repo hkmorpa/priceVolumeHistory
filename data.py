@@ -19,7 +19,6 @@ class priceVolumeHistory:
             for line in f:
                 self.stocks.append(line.strip())
     
-        print("Stocks Filled")
 
     def get_table_name(self,stock):
         if '-' in stock:
@@ -35,7 +34,6 @@ class priceVolumeHistory:
             query = f"CREATE TABLE if not exists '{table_name}' (date DATE, price INTEGER, volume INTEGER)"
             self.cursor.execute(query)
             self.conn.commit()
-            print (f"created table for {table_name}")
 
     def get_data_from_NSE(self, stock):
         stock_encoded = urllib.parse.quote(stock)
@@ -70,11 +68,12 @@ class priceVolumeHistory:
                     last_working_day = today
                 todayDate = last_working_day.strftime('%Y-%m-%d')
 
-                query = f"SELECT COUNT(*) FROM {table_name} WHERE date = {todayDate}"
+                query = f"SELECT COUNT(*) FROM {table_name} WHERE date = '{todayDate}'"
                 self.cursor.execute(query)
                 count = self.cursor.fetchone()[0]
                 if count <= 0:
-                    query = f"INSERT INTO {table_name} (date,price,volume) VALUES ({todayDate},{price},{volume})"
+                    query = f"INSERT INTO {table_name} (date,price,volume) VALUES ('{todayDate}',{price},{volume})"
+                    print (query)
                     self.cursor.execute(query)
                     self.conn.commit()
                 else:
@@ -86,17 +85,37 @@ class priceVolumeHistory:
             except Exception as e:
                 print(f"Error occured for {stock}, {e}")
 
+    def show_table_data(self, stock_code):
+        for stock in self.stocks:
+            if stock == stock_code:
+                table_name =  self.get_table_name(stock_code)
+                query = f"SELECT * from  {table_name}"
+                print (f"Here are the historical data for the {stock}")
+                print ("    Date      Price   Volume")
+                query_result = self.cursor.execute(query)
+                rows = query_result.fetchall()
+                for row in rows:
+                    print(row)
+                exit()
+
+
 def main():
     global args
 
-
     parser = argparse.ArgumentParser()
-    parser.add_argument("-show", action="store_true", help="Show the tables data")
+    parser.add_argument("-show", metavar="string", type=str, default="", help="Show the tables data of mentioned table")
 
     pvObj = priceVolumeHistory()
-    pvObj.fill_data_from_NSE()
-
     args = parser.parse_args()
+    if args.show:
+        if args.show == "":
+            print ("Pass the table name")
+            exit()
+        pvObj.show_table_data(args.show)
+    else:
+        pvObj.fill_data_from_NSE()
+
+
 
 if __name__ == '__main__':
     main()
