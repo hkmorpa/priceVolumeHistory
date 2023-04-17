@@ -66,6 +66,8 @@ class priceVolumeHistory:
                 today = datetime.date.today()
                 if today.weekday() == 5 or today.weekday() == 6:  # Saturday has a weekday index of 5
                     last_working_day = today - datetime.timedelta(days=today.weekday()-4)
+                else:
+                    last_working_day = today
                 todayDate = last_working_day.strftime('%Y-%m-%d')
 
                 query = f"SELECT COUNT(*) FROM {table_name} WHERE date = {todayDate}"
@@ -89,10 +91,12 @@ def main():
 
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("-show", action="store_true", help="Show the tables")
+    parser.add_argument("-show", action="store_true", help="Show the tables data")
 
     pvObj = priceVolumeHistory()
     pvObj.fill_data_from_NSE()
+
+    args = parser.parse_args()
 
 if __name__ == '__main__':
     main()
